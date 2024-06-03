@@ -28,4 +28,20 @@ describe('Game', () => {
 
         expect(game.score()).toBe(score);
     });
+
+
+
+    it.each(
+        [
+            [[10, 4, 5, 10, 6, 4, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 78],
+            [[10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 0], 267],
+            [[10, 0, 0, 10, 0, 0, 10, 0, 0, 10, 0, 0, 10, 0, 0], 50],
+        ]
+    )('strikes %p: %p', (rolls, score)=>{
+        const game = new Game();
+        rolls.forEach(roll => game.roll(roll));
+
+        expect(game.score()).toBe(score);
+    });
+
 });
