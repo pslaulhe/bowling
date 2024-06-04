@@ -1,11 +1,11 @@
-export class Game{
+export class Game {
     totalScore = 0;
     rolls: number[] = [];
     midFrame: boolean = false;
     framesCount = 0;
     extraRollNumber = 0;
 
-    roll(pins: number): void {
+    rollOld(pins: number): void {
         let currentRollScore = this.framesCount < 10 ? pins : 0;
         if (this.framesCount == 10) {
             this.extraRollNumber += 1;
@@ -40,7 +40,69 @@ export class Game{
         this.rolls.push(pins);
     }
 
-    score(): number {
+    frames: Frame[] = [];
+    roll(pins: number): void {
+        let currentFrame;
+        if (this.frames.length > 0) {
+            currentFrame = this.frames[this.frames.length - 1];
+        }
+        else {
+            currentFrame = new Frame();
+            this.frames.push(currentFrame);
+        }
+
+        if (currentFrame.isClosed()) {
+            currentFrame = new Frame();
+            this.frames.push(currentFrame);
+        }
+
+        const prevFrame = this.frames.length > 1 ? this.frames[this.frames.length - 2] : null;
+        const prevPrevFrame = this.frames.length > 2 ? this.frames[this.frames.length - 3] : null;
+
+        currentFrame.roll(pins);
+        prevFrame?.addBonusRoll(pins);
+        prevPrevFrame?.addBonusRoll(pins);
+    }
+
+    scoreOld(): number {
         return this.totalScore;
+    }
+
+    score(){
+        return this.frames.reduce((a, b) => a + b.frameScore(), 0);
+    }
+}
+
+class Frame {
+    rolls: number[] = [];
+    bonusRolls: number[] = [];
+
+    roll(pins: number): void {
+        this.rolls.push(pins);
+    }
+
+    isClosed(): boolean {
+        return this.rolls.length == 2 || this.isStrike();
+    }
+
+    isSpare(): boolean {
+        return this.rolls.length == 2 && this.rollsScore() == 10;
+    }
+
+    isStrike(): boolean {
+        return this.rolls.length == 1 && this.rollsScore() == 10;
+    }
+
+    addBonusRoll(pins: number): void {
+        if (this.isSpare() && this.bonusRolls.length < 1) this.bonusRolls.push(pins);
+        if (this.isStrike() && this.bonusRolls.length < 2) this.bonusRolls.push(pins);
+    }
+
+    rollsScore(){
+        return this.rolls.reduce((a, b) => a + b, 0);
+    }
+    frameScore(): number {
+        const bonusScore = this.bonusRolls.reduce((a, b) => a + b, 0);
+        return this.rollsScore() + bonusScore;
     }
 }
