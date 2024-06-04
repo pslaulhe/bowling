@@ -40,28 +40,22 @@ export class Game {
         this.rolls.push(pins);
     }
 
-    frames: Frame[] = [];
+    frames: Frame[] = [new Frame()];
     roll(pins: number): void {
-        let currentFrame;
-        if (this.frames.length > 0) {
-            currentFrame = this.frames[this.frames.length - 1];
+        let currentFrame = this.getCurrentFrame();
+        for (let frame of this.frames) {
+            if (frame == currentFrame && !frame.isClosed()) currentFrame.roll(pins);
+            else frame.addBonusRoll(pins);
         }
-        else {
+    }
+
+    private getCurrentFrame() {
+        let currentFrame = this.frames[this.frames.length - 1];
+        if (currentFrame.isClosed() && this.frames.length < 10) {
             currentFrame = new Frame();
             this.frames.push(currentFrame);
         }
-
-        if (currentFrame.isClosed()) {
-            currentFrame = new Frame();
-            this.frames.push(currentFrame);
-        }
-
-        const prevFrame = this.frames.length > 1 ? this.frames[this.frames.length - 2] : null;
-        const prevPrevFrame = this.frames.length > 2 ? this.frames[this.frames.length - 3] : null;
-
-        currentFrame.roll(pins);
-        prevFrame?.addBonusRoll(pins);
-        prevPrevFrame?.addBonusRoll(pins);
+        return currentFrame;
     }
 
     scoreOld(): number {
@@ -78,7 +72,7 @@ class Frame {
     bonusRolls: number[] = [];
 
     roll(pins: number): void {
-        this.rolls.push(pins);
+        if (!this.isClosed()) this.rolls.push(pins);
     }
 
     isClosed(): boolean {
@@ -101,6 +95,7 @@ class Frame {
     rollsScore(){
         return this.rolls.reduce((a, b) => a + b, 0);
     }
+
     frameScore(): number {
         const bonusScore = this.bonusRolls.reduce((a, b) => a + b, 0);
         return this.rollsScore() + bonusScore;
